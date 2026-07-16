@@ -1,26 +1,51 @@
-<app-hero-section />
+<section class="bg-gray-100 min-h-screen p-8 pt-24">
 
-<div
-  class="container mx-auto px-6"
->
-  <app-serch-filter />
+  <h1 class="text-4xl font-bold mb-8">
+    Find Your Place
+  </h1>
 
-  <app-map-section />
+  <div class="grid md:grid-cols-2 gap-5 mb-8">
+    
+    <input
+      [(ngModel)]="searchTerm"
+      (input)="filterResources()"
+      placeholder="Search..."
+      class="p-3 rounded-lg border">
 
-  <h2
-    class="text-3xl font-bold mt-12 mb-6"
-  >
-    Available Resources
-  </h2>
+    <select
+      [(ngModel)]="selectedType"
+      (change)="filterResources()"
+      class="p-3 rounded-lg border">
+      
+      <option value="">All Types</option>
+      <option value="Hospital">Hospital</option>
+      <option value="Clinic">Clinic</option>
+      <option value="ICU">ICU</option>
+      <option value="Workspace">Workspace</option>
+      <option value="Building">Building</option>
+    </select>
 
-  <div
-    class="grid lg:grid-cols-3 md:grid-cols-2 gap-8"
-  >
-    <app-resource-card />
-    <app-resource-card />
-    <app-resource-card />
-    <app-resource-card />
-    <app-resource-card />
-    <app-resource-card />
   </div>
-</div>
+
+  <div class="grid md:grid-cols-1 md:grid-cols-3 gap-6">
+    
+    @for (resource of filteredResources; track resource._id) {
+      <app-resource-card
+        [resource]="resource"
+        (book)="bookResource($event)">
+      </app-resource-card>
+    } @empty {
+      <div class="col-span-3 text-center py-10">
+        <p class="text-gray-500 text-lg font-medium">No resources found matching your search.</p>
+      </div>
+    }
+
+  </div>
+
+</section>
+
+@if (showToast) {
+  <div class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded-lg shadow-xl z-50">
+    {{ toastMessage }}
+  </div>
+}
