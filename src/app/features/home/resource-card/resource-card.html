@@ -1,0 +1,43 @@
+<div
+  class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition"
+>
+  <img
+    src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d"
+    class="h-48 w-full object-cover"
+  />
+
+  <div class="p-5">
+    <div
+      class="flex justify-between items-center mb-3"
+    >
+      <h2
+        class="text-xl font-bold"
+      >
+        Alexandria Hospital
+      </h2>
+
+      <span
+  [class]="getStatusClass(resource.status)"
+  class="px-3 py-1 rounded-full text-sm"
+>
+  {{ resource.status }}
+</span>
+    </div>
+
+    <p class="text-gray-500">
+      Smouha, Alexandria
+    </p>
+
+    <p
+      class="text-gray-400 mt-2"
+    >
+      Alex Health Organization
+    </p>
+
+    <button
+      class="mt-5 w-full bg-blue-600 text-white py-3 rounded-xl"
+    >
+      Book Now
+    </button>
+  </div>
+</div>
