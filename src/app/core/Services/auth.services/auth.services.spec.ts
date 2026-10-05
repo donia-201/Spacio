@@ -1,22 +1,20 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { AuthServices } from './auth.services';
+import { AuthService } from './auth.services';
+import { AuthService as CanonicalAuthService } from '../auth.service';
 
-describe('AuthServices', () => {
-  let component: AuthServices;
-  let fixture: ComponentFixture<AuthServices>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [AuthServices],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(AuthServices);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
+describe('AuthService (legacy path)', () => {
+  it('re-exports the canonical service rather than defining a second one', () => {
+    expect(AuthService).toBe(CanonicalAuthService);
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('can be injected', () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+
+    expect(TestBed.inject(AuthService)).toBeInstanceOf(AuthService);
   });
 });

@@ -1,51 +1,246 @@
-<section class="bg-gray-100 min-h-screen p-8 pt-24">
+<div class="min-h-screen bg-slate-50">
+  <!-- Page header -->
+  <header class="border-b border-slate-200 bg-white">
+    <div class="container-page flex flex-col gap-4 py-7 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-extrabold text-ink">
+          أهلاً {{ user?.firstName }} 👋
+        </h1>
+        <p class="mt-1 text-sm text-ink-soft">
+          @if (coords) {
+            الأماكن القريبة منك مرتبة حسب موقعك الحالي.
+          } @else {
+            فعّل الموقع عشان نرتّبلك الأماكن القريبة منك.
+          }
+        </p>
+      </div>
 
-  <h1 class="text-4xl font-bold mb-8">
-    Find Your Place
-  </h1>
+      <button
+        type="button"
+        (click)="askForLocation()"
+        [disabled]="locating()"
+        class="btn-ghost-dark shrink-0 !border-brand-200 !text-brand-700 hover:!bg-brand-50 disabled:opacity-60"
+      >
+        <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="2" />
+          <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" />
+          <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        {{ locating() ? 'جاري تحديدك...' : 'حدّث موقعي' }}
+      </button>
+    </div>
+  </header>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-8">
-    
-    <input
-      [(ngModel)]="searchTerm"
-      (input)="filterResources()"
-      placeholder="Search..."
-      class="p-3 rounded-lg border">
-
-    <select
-      [(ngModel)]="selectedType"
-      (change)="filterResources()"
-      class="p-3 rounded-lg border">
-      
-      <option value="">All Types</option>
-      <option value="Hospital">Hospital</option>
-      <option value="Clinic">Clinic</option>
-      <option value="ICU">ICU</option>
-      <option value="Workspace">Workspace</option>
-      <option value="Building">Building</option>
-    </select>
-
-  </div>
-
-  <div class="grid md:grid-cols-1 md:grid-cols-3 gap-6">
-    
-    @for (resource of filteredResources; track resource._id) {
-      <app-resource-card
-        [resource]="resource"
-        (book)="bookResource($event)">
-      </app-resource-card>
-    } @empty {
-      <div class="col-span-3 text-center py-10">
-        <p class="text-gray-500 text-lg font-medium">No resources found matching your search.</p>
+  <div class="container-page py-8">
+    <!-- Stats -->
+    @if (summary(); as s) {
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">حجوزاتك</p>
+          <p class="mt-1.5 text-2xl font-extrabold text-ink tabular">{{ s.bookings.total }}</p>
+        </div>
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">قادمة</p>
+          <p class="mt-1.5 text-2xl font-extrabold text-brand-700 tabular">
+            {{ s.bookings.byStatus['approved'] }}
+          </p>
+        </div>
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">إشعارات جديدة</p>
+          <p class="mt-1.5 text-2xl font-extrabold text-accent-600 tabular">
+            {{ s.unreadNotifications }}
+          </p>
+        </div>
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">أماكن مرتبطة بحسابك</p>
+          <p class="mt-1.5 text-2xl font-extrabold text-ink tabular">
+            {{ s.organizations.length }}
+          </p>
+        </div>
       </div>
     }
 
-  </div>
+    <!-- Location prompt: replaces the map until we have a position -->
+    @if (needsLocation) {
+      <div
+        class="relative isolate mt-8 overflow-hidden rounded-[16px] bg-brand-800 px-6 py-10 text-center text-white shadow-brand sm:px-10"
+      >
+        <div
+          class="absolute inset-0 -z-10 opacity-20"
+          style="
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.4) 1px, transparent 0);
+            background-size: 22px 22px;
+          "
+          aria-hidden="true"
+        ></div>
 
-</section>
+        <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-white/15 text-3xl">
+          📍
+        </span>
+        <h2 class="mt-4 text-xl font-extrabold sm:text-2xl">خلّينا نعرف مكانك الأول</h2>
+        <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-brand-50">
+          من غير الموقع مش هنعرف نرتّب الأماكن القريبة منك ولا نوصلك لأقرب نتيجة بسرعة.
+        </p>
+        <button
+          type="button"
+          (click)="askForLocation()"
+          [disabled]="locating()"
+          class="mt-6 inline-flex items-center justify-center rounded-xl bg-accent-600 px-6 py-3 text-sm font-extrabold shadow-accent transition-colors hover:bg-accent-700 disabled:opacity-60"
+        >
+          {{ locating() ? 'جاري تحديد موقعك...' : 'فعّل الموقع' }}
+        </button>
+      </div>
+    }
 
-@if (showToast) {
-  <div class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded-lg shadow-xl z-50">
-    {{ toastMessage }}
+    <!-- Categories -->
+    <section class="mt-10">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-extrabold text-ink">تصفح حسب التصنيف</h2>
+          <p class="mt-1 text-sm text-ink-soft">اختار اللي محتاجه وشوف المتاح حواليك.</p>
+        </div>
+      </div>
+
+      <div class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        @for (category of categories(); track category.key) {
+          <a
+            [routerLink]="['/home/category', category.key]"
+            class="group card-soft flex items-center gap-3 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-brand-300 hover:shadow-lift"
+          >
+            <span
+              class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-50 text-2xl transition-colors group-hover:bg-brand-600"
+            >
+              {{ category.icon }}
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-sm font-bold text-ink">{{ category.plural }}</span>
+              <span class="block text-[11px] font-semibold text-ink-muted tabular">
+                {{ category.nearbyCount ?? 0 }} قريب منك
+              </span>
+            </span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              class="h-4 w-4 shrink-0 text-ink-muted rtl:-scale-x-100 transition-colors group-hover:text-brand-700"
+              aria-hidden="true"
+            >
+              <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
+        } @empty {
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            <div class="h-20 animate-pulse rounded-[16px] border border-slate-200 bg-white"></div>
+          }
+        }
+      </div>
+    </section>
+
+    <!-- Map + nearby list -->
+    <section class="mt-12 grid gap-6 lg:grid-cols-5">
+      <div class="lg:col-span-3">
+        <h2 class="text-xl font-extrabold text-ink">الخريطة</h2>
+        <p class="mt-1 text-sm text-ink-soft">كل الأماكن القريبة منك على الخريطة.</p>
+
+        <div
+          class="mt-4 h-[440px] overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-soft"
+        >
+          @if (needsLocation) {
+            <div class="grid h-full place-items-center px-8 text-center">
+              <div>
+                <p class="text-3xl">🗺️</p>
+                <p class="mt-3 text-sm font-bold text-ink">الخريطة هتظهر هنا</p>
+                <p class="mt-1 text-xs text-ink-muted">
+                  فعّل الموقع علشان تشوف الأماكن على الخريطة.
+                </p>
+              </div>
+            </div>
+          } @else {
+            <app-map-view [markers]="mapMarkers()" />
+          }
+        </div>
+      </div>
+
+      <div class="lg:col-span-2">
+        <div class="flex items-end justify-between gap-3">
+          <h2 class="text-xl font-extrabold text-ink">أماكن قريبة منك</h2>
+          @if (nearby().length) {
+            <span class="text-xs font-semibold text-ink-muted tabular">
+              {{ nearby().length }} نتيجة
+            </span>
+          }
+        </div>
+
+        <div class="mt-4 max-h-[440px] space-y-3 overflow-y-auto pe-1">
+          @for (org of nearby(); track org._id) {
+            <a
+              [routerLink]="['/organizations', org._id]"
+              class="card-soft flex items-center gap-3 p-4 transition-all duration-200 hover:border-brand-300 hover:shadow-lift"
+            >
+              <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-xl">
+                {{ org.typeLabel?.[0] ?? '📍' }}
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-bold text-ink">{{ org.name }}</span>
+                <span class="block truncate text-xs text-ink-soft">
+                  {{ org.city || org.governorate }} • {{ org.typeLabel }}
+                </span>
+              </span>
+              @if (org.distanceMeters !== undefined) {
+                <span
+                  class="shrink-0 rounded-lg bg-accent-50 px-2.5 py-1 text-[11px] font-bold text-accent-700 tabular"
+                >
+                  {{ formatDistance(org.distanceMeters) }}
+                </span>
+              }
+            </a>
+          } @empty {
+            <div
+              class="card-soft px-6 py-10 text-center"
+            >
+              <p class="text-3xl">🔍</p>
+              <p class="mt-3 text-sm font-bold text-ink">مفيش أماكن قريبة لسه</p>
+              <p class="mt-1 text-xs leading-relaxed text-ink-muted">
+                جرّب تزود نطاق البحث، أو اتأكد إن الموقع متظبط صح.
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Upcoming bookings -->
+    @if (upcoming().length) {
+      <section class="mt-12">
+        <h2 class="text-xl font-extrabold text-ink">حجوزاتك القادمة</h2>
+        <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          @for (booking of upcoming(); track booking._id) {
+            <div class="card-soft p-5">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-bold text-ink">{{ booking.resource.name }}</p>
+                  <p class="mt-0.5 truncate text-xs text-ink-soft">
+                    {{ booking.organization.name }}
+                  </p>
+                </div>
+                <span
+                  class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold"
+                  [class]="booking.status === 'approved'
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'bg-amber-50 text-amber-700'"
+                >
+                  {{ booking.status === 'approved' ? 'مؤكد' : 'بانتظار الموافقة' }}
+                </span>
+              </div>
+              <p class="mt-3 text-xs font-semibold text-ink-muted tabular">
+                {{ booking.startTime | date: 'EEEE d MMMM، HH:mm' }}
+              </p>
+            </div>
+          }
+        </div>
+        <a routerLink="/my-bookings" class="btn-ghost-dark mt-5">
+          كل حجوزاتي
+        </a>
+      </section>
+    }
   </div>
-}
+</div>

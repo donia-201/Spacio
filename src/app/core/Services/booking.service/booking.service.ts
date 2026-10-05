@@ -1,22 +1,9 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class BookingService {
-
-  private http = inject(HttpClient);
-
-  baseUrl = 'http://localhost:3000/bookings';
-
-  createBooking(resourceId: string): Observable<any> {
-    return this.http.post(
-      this.baseUrl,
-      {
-        resource: resourceId
-      }
-    );
-  }
-}
+/**
+ * Legacy path kept so old imports don't break.
+ *
+ * The real service is `../booking.service`. This was a second class with the
+ * same name and a `createBooking(resourceId)` that posted only a `resource`
+ * field, which the backend rejects — it requires `organization`,
+ * `startTime` and `endTime` too.
+ */
+export { BookingService } from '../booking.service';

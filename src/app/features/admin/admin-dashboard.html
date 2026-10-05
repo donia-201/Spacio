@@ -1,0 +1,198 @@
+<div class="min-h-screen bg-slate-50">
+  <header class="border-b border-slate-200 bg-white">
+    <div class="container-page py-7">
+      <h1 class="text-2xl font-extrabold text-ink">لوحة التحكم</h1>
+      <p class="mt-1.5 text-sm text-ink-soft">
+        نظرة عامة على كل المنصة — المستخدمين، الأماكن، والحجوزات.
+      </p>
+    </div>
+  </header>
+
+  <div class="container-page py-8">
+    @if (error()) {
+      <div class="rounded-[16px] border border-red-200 bg-red-50 p-5 text-sm font-semibold text-red-700">
+        {{ error() }}
+      </div>
+    } @else if (loading()) {
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+          <div class="h-28 animate-pulse rounded-[16px] border border-slate-200 bg-white"></div>
+        }
+      </div>
+    } @else if (data(); as d) {
+      <!-- Headline stats -->
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">المستخدمين</p>
+          <p class="mt-1.5 text-2xl font-extrabold text-ink tabular">{{ d.users.total }}</p>
+          <p class="mt-1 text-[11px] text-brand-700 tabular">
+            +{{ d.users.newThisMonth }} هذا الشهر
+          </p>
+        </div>
+
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">الأماكن</p>
+          <p class="mt-1.5 text-2xl font-extrabold text-ink tabular">{{ d.organizations.total }}</p>
+          <p class="mt-1 text-[11px] text-ink-muted tabular">
+            {{ d.organizations.deactivated }} غير مفعّل
+          </p>
+        </div>
+
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">الحجوزات</p>
+          <p class="mt-1.5 text-2xl font-extrabold text-ink tabular">{{ d.bookings.total }}</p>
+          <p class="mt-1 text-[11px] text-ink-muted tabular">
+            {{ d.bookings.thisMonth }} هذا الشهر
+          </p>
+        </div>
+
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">طلبات انضمام معلّقة</p>
+          <p
+            class="mt-1.5 text-2xl font-extrabold tabular"
+            [class.text-accent-600]="d.memberships.pending > 0"
+            [class.text-ink]="d.memberships.pending === 0"
+          >
+            {{ d.memberships.pending }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Distributions -->
+      <div class="mt-6 grid gap-6 lg:grid-cols-3">
+        <div class="card-soft p-5">
+          <h2 class="text-sm font-bold text-ink">المستخدمين حسب الرتبة</h2>
+          <div class="mt-4 space-y-2.5">
+            @for (row of pairs(d.users.byRole); track row[0]) {
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-semibold text-ink-soft">{{ row[0] }}</span>
+                <span class="font-extrabold text-ink tabular">{{ row[1] }}</span>
+              </div>
+            }
+            <p class="border-t border-slate-100 pt-2.5 text-[11px] text-ink-muted tabular">
+              {{ d.users.withLocation }} مستخدم فعّل الموقع
+            </p>
+          </div>
+        </div>
+
+        <div class="card-soft p-5">
+          <h2 class="text-sm font-bold text-ink">الأماكن حسب التصنيف</h2>
+          <div class="mt-4 space-y-2.5">
+            @for (row of pairs(d.organizations.byType); track row[0]) {
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-semibold text-ink-soft">{{ row[0] }}</span>
+                <span class="font-extrabold text-ink tabular">{{ row[1] }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="card-soft p-5">
+          <h2 class="text-sm font-bold text-ink">حالة الموارد</h2>
+          <div class="mt-4 space-y-2.5">
+            @for (row of pairs(d.resources.byStatus); track row[0]) {
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-semibold text-ink-soft">{{ row[0] | status }}</span>
+                <span class="font-extrabold text-ink tabular">{{ row[1] }}</span>
+              </div>
+            }
+            <p class="border-t border-slate-100 pt-2.5 text-[11px] text-ink-muted tabular">
+              {{ d.resources.total }} إجمالي
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent activity -->
+      <div class="mt-6 grid gap-6 lg:grid-cols-2">
+        <div class="card-soft p-5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-bold text-ink">أحدث الحجوزات</h2>
+            <span class="text-[11px] font-semibold text-ink-muted tabular">{{ d.bookings.total }}</span>
+          </div>
+
+          <div class="mt-4 space-y-3">
+            @for (booking of d.recentBookings; track booking._id) {
+              <div class="flex items-center gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                <span
+                  class="rounded-full px-2.5 py-1 text-[11px] font-bold"
+                  [class.bg-brand-50]="booking.status === 'approved'"
+                  [class.text-brand-700]="booking.status === 'approved'"
+                  [class.bg-amber-50]="booking.status === 'pending'"
+                  [class.text-amber-700]="booking.status === 'pending'"
+                  [class.bg-red-50]="booking.status === 'rejected'"
+                  [class.text-red-700]="booking.status === 'rejected'"
+                  [class.bg-slate-100]="booking.status !== 'approved' && booking.status !== 'pending' && booking.status !== 'rejected'"
+                  [class.text-slate-600]="booking.status !== 'approved' && booking.status !== 'pending' && booking.status !== 'rejected'"
+                >
+                  {{ booking.status | status }}
+                </span>
+                <span class="min-w-0 flex-1 truncate text-xs font-semibold text-ink">
+                  {{ booking.resource.name }} — {{ booking.organization.name }}
+                </span>
+                <span class="shrink-0 text-[11px] text-ink-muted tabular">
+                  {{ booking.createdAt | date: 'd MMM' }}
+                </span>
+              </div>
+            } @empty {
+              <p class="py-6 text-center text-xs text-ink-muted">مفيش حجوزات لسه</p>
+            }
+          </div>
+        </div>
+
+        <div class="card-soft p-5">
+          <h2 class="text-sm font-bold text-ink">أكثر الأماكن حجزاً</h2>
+          <div class="mt-4 space-y-3">
+            @for (org of d.topOrganizations; track org._id; let i = $index) {
+              <div class="flex items-center gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                <span
+                  class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-brand-50 text-[11px] font-extrabold text-brand-700 tabular"
+                >
+                  {{ i + 1 }}
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-xs font-bold text-ink">{{ org.name }}</span>
+                  <span class="block text-[11px] text-ink-muted">{{ org.governorate }}</span>
+                </span>
+                <span class="shrink-0 text-[11px] font-bold text-ink tabular">
+                  {{ org.bookings }} حجز
+                </span>
+              </div>
+            } @empty {
+              <p class="py-6 text-center text-xs text-ink-muted">مفيش بيانات كفاية</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- New users -->
+      <div class="card-soft mt-6 p-5">
+        <h2 class="text-sm font-bold text-ink">أحدث المستخدمين</h2>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full min-w-[600px] text-right text-xs">
+            <thead>
+              <tr class="border-b border-slate-200 text-ink-muted">
+                <th class="py-2.5 font-bold">الاسم</th>
+                <th class="py-2.5 font-bold">البريد</th>
+                <th class="py-2.5 font-bold">الرتبة</th>
+                <th class="py-2.5 font-bold">الموقع</th>
+                <th class="py-2.5 font-bold">التسجيل</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of d.recentUsers; track row._id) {
+                <tr class="border-b border-slate-100 last:border-0">
+                  <td class="py-3 font-semibold text-ink">{{ row.firstName }} {{ row.lastName }}</td>
+                  <td dir="ltr" class="py-3 text-start text-ink-soft">{{ row.email }}</td>
+                  <td class="py-3 text-ink-soft">{{ row.role }}</td>
+                  <td class="py-3 text-ink-soft">{{ row.locationPermission | status }}</td>
+                  <td class="py-3 text-ink-muted tabular">{{ row.createdAt | date: 'd MMM y' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
+</div>

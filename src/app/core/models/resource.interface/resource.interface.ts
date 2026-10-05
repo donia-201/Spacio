@@ -1,26 +1,14 @@
-import { Component } from '@angular/core';
+/**
+ * Legacy path kept so old imports don't break.
+ *
+ * The canonical model now lives in `../models`. This file used to define a
+ * second, narrower `Resource` interface plus an empty placeholder component;
+ * keeping both meant two shapes for the same thing, so it is now a re-export.
+ */
+export type {
+  Resource,
+  ResourceStatus,
+  ResourceType,
+} from '../models';
 
-export interface Resource {
-  _id: string;
-  name: string;
-  type: string;
-  description: string;
-  address: string;
-  governorate: string;
-  image?: string;
-  status: 'available' | 'booked' | 'maintenance';
-  organization?: {
-    _id: string;
-    name: string;
-  };
-}
-
-@Component({
-  selector: 'app-resource-interface', 
-  standalone: true, 
-  imports: [],
-  templateUrl: './resource.interface.html',
-  styleUrl: './resource.interface.css',
-})
-export class ResourceInterface {
-}
+export { ResourceInterface } from './resource.interface.component';

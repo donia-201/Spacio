@@ -1,0 +1,363 @@
+<div class="min-h-screen bg-slate-50">
+  @if (loading()) {
+    <div class="container-page py-10">
+      <div class="h-8 w-48 animate-pulse rounded-lg bg-slate-200"></div>
+      <div class="mt-6 h-56 animate-pulse rounded-[16px] bg-white"></div>
+      <div class="mt-6 grid gap-4 lg:grid-cols-3">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="h-40 animate-pulse rounded-[16px] bg-white"></div>
+        }
+      </div>
+    </div>
+  } @else if (error()) {
+    <div class="container-page py-16 text-center">
+      <p class="text-4xl">😕</p>
+      <p class="mt-4 text-lg font-bold text-ink">{{ error() }}</p>
+      <a routerLink="/home" class="btn-ghost-dark mt-6">الرجوع للرئيسية</a>
+    </div>
+  } @else if (organization(); as org) {
+    <!-- Cover + header -->
+    <header class="border-b border-slate-200 bg-white">
+      <div class="container-page py-7">
+        <a
+          routerLink="/home"
+          class="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition-colors hover:text-brand-700"
+        >
+          <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4 rtl:-scale-x-100" aria-hidden="true">
+            <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          رجوع
+        </a>
+
+        <div class="mt-5 flex flex-col gap-5 sm:flex-row sm:items-start">
+          <span class="grid h-20 w-20 shrink-0 place-items-center rounded-[16px] bg-brand-50 text-4xl shadow-soft">
+            {{ org.typeLabel?.[0] ?? '📍' }}
+          </span>
+
+          <div class="min-w-0 flex-1">
+            <h1 class="text-2xl font-extrabold text-ink sm:text-3xl">{{ org.name }}</h1>
+
+            <div class="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-ink-soft">
+              <span class="flex items-center gap-1.5">
+                <span>🏷</span>{{ org.typeLabel }}
+              </span>
+              <span class="flex items-center gap-1.5">
+                <span>📍</span>{{ org.address || org.city || org.governorate }}
+              </span>
+              @if (org.distanceMeters !== undefined) {
+                <span class="flex items-center gap-1.5 font-bold text-accent-600 tabular">
+                  <span>🚶</span>{{ formatDistance(org.distanceMeters) }} منك
+                </span>
+              }
+            </div>
+
+            @if (org.description) {
+              <p class="mt-3.5 max-w-2xl text-sm leading-relaxed text-ink-soft">
+                {{ org.description }}
+              </p>
+            }
+
+            <div class="mt-5 flex flex-wrap gap-2">
+              @if (org.contactPhone) {
+                <a [href]="'tel:' + org.contactPhone" dir="ltr" class="btn-ghost-dark !py-2 text-xs">
+                  📞 {{ org.contactPhone }}
+                </a>
+              }
+              @if (org.website) {
+                <a
+                  [href]="org.website"
+                  target="_blank"
+                  rel="noopener"
+                  dir="ltr"
+                  class="btn-ghost-dark !py-2 text-xs"
+                >
+                  🌐 الموقع
+                </a>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-page py-8">
+      <div class="grid gap-6 lg:grid-cols-3">
+        <!-- Resources -->
+        <div class="lg:col-span-2">
+          <h2 class="text-xl font-extrabold text-ink">اختر اللي عايز تحجزه</h2>
+
+          <!-- Option filters: the place's own inventory -->
+          @if (optionChips().length) {
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                (click)="activeOption.set('')"
+                class="rounded-xl border px-3.5 py-2 text-xs font-bold transition-colors"
+                [class.border-brand-600]="!activeOption()"
+                [class.bg-brand-600]="!activeOption()"
+                [class.text-white]="!activeOption()"
+                [class.border-slate-200]="!!activeOption()"
+                [class.bg-white]="!!activeOption()"
+                [class.text-ink-soft]="!!activeOption()"
+              >
+                كل الاختيارات ({{ resources().length }})
+              </button>
+
+              @for (option of optionChips(); track option.key) {
+                <button
+                  type="button"
+                  (click)="setOption(option.key)"
+                  class="rounded-xl border px-3.5 py-2 text-xs font-bold transition-colors"
+                  [class.border-brand-600]="activeOption() === option.key"
+                  [class.bg-brand-600]="activeOption() === option.key"
+                  [class.text-white]="activeOption() === option.key"
+                  [class.border-slate-200]="activeOption() !== option.key"
+                  [class.bg-white]="activeOption() !== option.key"
+                  [class.text-ink-soft]="activeOption() !== option.key"
+                >
+                  {{ option.label }}
+                  <span class="opacity-70 tabular">({{ countFor(option.key) }})</span>
+                </button>
+              }
+            </div>
+          }
+
+          <div class="mt-5 space-y-3">
+            @for (resource of visibleResources(); track resource._id) {
+              <div class="card-soft flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-sm font-bold text-ink">{{ resource.name }}</h3>
+                    <span
+                      class="rounded-full px-2.5 py-0.5 text-[11px] font-bold"
+                      [class.bg-brand-50]="resource.status === 'available'"
+                      [class.text-brand-700]="resource.status === 'available'"
+                      [class.bg-amber-50]="resource.status === 'booked'"
+                      [class.text-amber-700]="resource.status === 'booked'"
+                      [class.bg-slate-100]="resource.status === 'maintenance'"
+                      [class.text-slate-600]="resource.status === 'maintenance'"
+                    >
+                      {{ statusLabel(resource.status) }}
+                    </span>
+                    @if (resource.requiresApproval) {
+                      <span class="rounded-full bg-accent-50 px-2.5 py-0.5 text-[11px] font-bold text-accent-700">
+                        يحتاج موافقة
+                      </span>
+                    }
+                  </div>
+
+                  <p class="mt-1 text-xs text-ink-soft">
+                    {{ resource.typeLabel }}
+                    @if (resource.capacity) {
+                      <span class="tabular">• سعة {{ resource.capacity }}</span>
+                    }
+                  </p>
+
+                  @if (resource.description) {
+                    <p class="mt-1.5 line-clamp-2 text-xs leading-relaxed text-ink-muted">
+                      {{ resource.description }}
+                    </p>
+                  }
+
+                  @if (resource.amenities.length) {
+                    <div class="mt-2 flex flex-wrap gap-1.5">
+                      @for (amenity of resource.amenities; track amenity) {
+                        <span
+                          class="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-ink-soft"
+                        >
+                          {{ amenity }}
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="shrink-0">
+                  @if (resource.status === 'available') {
+                    <button type="button" (click)="openBooking(resource)" class="btn-accent w-full !py-2.5 text-xs sm:w-auto">
+                      احجز
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      disabled
+                      class="btn-ghost-dark w-full !py-2.5 text-xs opacity-60 sm:w-auto"
+                    >
+                      غير متاح
+                    </button>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <div class="card-soft px-6 py-12 text-center">
+                <p class="text-3xl">🗂️</p>
+                <p class="mt-3 text-sm font-bold text-ink">مفيش اختيارات في التصنيف ده</p>
+                <button
+                  type="button"
+                  (click)="activeOption.set('')"
+                  class="btn-ghost-dark mt-5"
+                >
+                  شوف كل الاختيارات
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Map + contact -->
+        <aside class="space-y-5">
+          <div
+            class="h-80 overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-soft"
+          >
+            <app-map-view [markers]="mapMarkers()" [route]="mapRoute()" [zoom]="14" />
+          </div>
+
+          <div class="card-soft p-5">
+            <h3 class="text-sm font-bold text-ink">معلومات المكان</h3>
+            <dl class="mt-3.5 space-y-3 text-xs">
+              <div>
+                <dt class="font-semibold text-ink-muted">العنوان</dt>
+                <dd class="mt-0.5 leading-relaxed text-ink">
+                  {{ org.address || '—' }}<br />
+                  {{ org.city }} {{ org.governorate }}
+                </dd>
+              </div>
+              @if (!coords) {
+                <div class="rounded-xl bg-brand-50 p-3">
+                  <p class="text-[11px] leading-relaxed text-brand-800">
+                    فعّل الموقع لتعرف المسافة الدقيقة وتشوف خط المسافة على الخريطة.
+                  </p>
+                </div>
+              }
+            </dl>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ================= Booking dialog ================= -->
+    @if (bookingResource(); as resource) {
+      <div
+        class="fixed inset-0 z-[1000] grid place-items-end bg-slate-900/50 p-0 backdrop-blur-sm sm:place-items-center sm:p-4"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div
+          class="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-[24px] bg-white p-6 shadow-lift sm:rounded-[20px] sm:p-7"
+        >
+          @if (bookingDone()) {
+            <!-- Success -->
+            <div class="py-6 text-center">
+              <span
+                class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-brand-50 text-3xl"
+              >
+                ✅
+              </span>
+              <h2 class="mt-4 text-lg font-extrabold text-ink">{{ bookingDone() }}</h2>
+              <p class="mt-1.5 text-sm text-ink-soft">
+                هتلاقي كل تحديثات الحجز في صفحة الإشعارات.
+              </p>
+              <a routerLink="/my-bookings" (click)="closeBooking()" class="btn-accent mt-6 w-full">
+                شوف حجوزاتي
+              </a>
+            </div>
+          } @else {
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h2 class="text-lg font-extrabold text-ink">احجز {{ resource.name }}</h2>
+                <p class="mt-0.5 text-xs text-ink-soft">
+                  {{ organization()?.name }} • {{ resource.typeLabel }}
+                </p>
+              </div>
+              <button
+                type="button"
+                (click)="closeBooking()"
+                class="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-ink-muted transition-colors hover:bg-slate-100 hover:text-ink"
+                aria-label="اقفل"
+              >
+                <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="mt-6 space-y-4">
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label for="start" class="mb-1.5 block text-xs font-bold text-ink">
+                    من
+                  </label>
+                  <input
+                    id="start"
+                    type="datetime-local"
+                    [ngModel]="startTime()"
+                    (ngModelChange)="startTime.set($event)"
+                    class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-500"
+                  />
+                </div>
+                <div>
+                  <label for="end" class="mb-1.5 block text-xs font-bold text-ink">إلى</label>
+                  <input
+                    id="end"
+                    type="datetime-local"
+                    [ngModel]="endTime()"
+                    (ngModelChange)="endTime.set($event)"
+                    class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label for="notes" class="mb-1.5 block text-xs font-bold text-ink">
+                  ملاحظات <span class="font-normal text-ink-muted">(اختياري)</span>
+                </label>
+                <textarea
+                  id="notes"
+                  rows="3"
+                  [ngModel]="notes()"
+                  (ngModelChange)="notes.set($event)"
+                  placeholder="أي تفاصيل تحب المكان يعرفها..."
+                  class="w-full resize-none rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-500"
+                ></textarea>
+              </div>
+
+              @if (resource.requiresApproval) {
+                <div
+                  class="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs leading-relaxed text-amber-800"
+                >
+                  ⏳ المكان ده بيحتاج موافقة على الحجز. هيوصلك إشعار أول ما يرد.
+                </div>
+              }
+
+              @if (bookingError()) {
+                <div
+                  class="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs font-semibold text-red-700"
+                >
+                  {{ bookingError() }}
+                </div>
+              }
+            </div>
+
+            <div class="mt-7 flex gap-3">
+              <button
+                type="button"
+                (click)="closeBooking()"
+                class="btn-ghost-dark flex-1"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                (click)="confirmBooking()"
+                [disabled]="bookingBusy()"
+                class="btn-accent flex-1 disabled:opacity-60"
+              >
+                {{ bookingBusy() ? 'جاري التأكيد...' : 'أكّد الحجز' }}
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

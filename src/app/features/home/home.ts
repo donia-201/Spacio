@@ -1,85 +1,145 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
-import { ResourceService } from '../../../app/core/Services/resource.service/resource.service';
-import { BookingService } from '../../core/Services/booking.service/booking.service';
-import { Resource } from '../../core/models/resource.interface/resource.interface';
-import { ResourceCard } from '../../shared/components/resource-card/resource-card'; 
+import { OrganizationService } from '../../core/Services/organization.service';
+import { LocationService } from '../../core/Services/location.service';
+import { AuthService } from '../../core/Services/auth.service';
+import { DashboardService } from '../../core/Services/dashboard.service';
+import { Booking, Category, Organization, UserDashboard } from '../../core/models/models';
+import { MapMarker, MapView } from '../../shared/components/map-view/map-view';
 
 @Component({
   selector: 'app-home',
-  standalone: true, 
-  imports: [
-    CommonModule,
-    FormsModule,
-    ResourceCard
-  ],
+  standalone: true,
+  imports: [CommonModule, RouterLink, MapView],
   templateUrl: './home.html',
-  styleUrl: './home.css'
+  styleUrl: './home.css',
 })
 export class Home implements OnInit {
+  private organizationService = inject(OrganizationService);
+  private location = inject(LocationService);
+  public auth = inject(AuthService);
+  private dashboardService = inject(DashboardService);
 
-  private resourceService = inject(ResourceService);
-  private bookingService = inject(BookingService);
+  readonly categories = signal<Category[]>([]);
+  readonly nearby = signal<Organization[]>([]);
+  readonly summary = signal<UserDashboard | null>(null);
+  readonly loading = signal(true);
+  readonly locating = signal(false);
+  readonly mapMarkers = signal<MapMarker[]>([]);
 
-  resources: Resource[] = [];
-  filteredResources: Resource[] = [];
-  searchTerm = '';
-  selectedType = '';
-  showToast = false;
-  toastMessage = '';
+  /**
+   * Upcoming bookings, hoisted out of the template. Under `strictTemplates`
+   * an `@for` over `summary()?.bookings?.upcoming` won't narrow out `undefined`,
+   * so the array has to be non-nullable at the call site.
+   */
+  readonly upcoming = computed<Booking[]>(() => this.summary()?.bookings.upcoming ?? []);
 
-  ngOnInit() {
-    this.getResources();
+  readonly radius = 5000;
+  readonly nearbyLimit = 12;
+
+  get user() {
+    return this.auth.currentUser();
   }
 
-  getResources() {
-    this.resourceService
-      .getResources()
-      .subscribe({
-        next: (res: any) => {
-          console.log(' data that arrives to angular is :', res);
-          const data = res?.data || res || [];
-          this.resources = data;
-          this.filteredResources = data;
-        },
-        error: (err) => {
-          console.error('Error fetching resources:', err);
-        }
-      });
+  get coords() {
+    return this.location.coords();
   }
 
-filterResources() {
-    this.filteredResources = this.resources.filter((r: any) => {
-      const searchVal = this.searchTerm.trim().toLowerCase();
-      const nameMatch = !searchVal || (r?.name && r.name.toLowerCase().includes(searchVal));
+  /** Shown instead of the map when the user hasn't shared a location. */
+  get needsLocation(): boolean {
+    return this.auth.needsLocation() || !this.location.hasCoords();
+  }
 
-      const typeMatch = !this.selectedType || r?.type === this.selectedType;
+  ngOnInit(): void {
+    this.loadSummary();
+    this.loadContent();
+  }
 
-      return nameMatch && typeMatch;
+  private loadSummary(): void {
+    this.dashboardService.user().subscribe({
+      next: (res) => this.summary.set(res.data ?? null),
+      error: () => this.summary.set(null),
     });
   }
 
-  bookResource(id: string) {
-    this.bookingService
-      .createBooking(id)
+  private loadContent(): void {
+    const geo = this.geoOptions();
+
+    this.organizationService.categories(geo).subscribe({
+      next: (res) => this.categories.set(res.data?.categories ?? []),
+      error: () => this.categories.set([]),
+    });
+
+    this.organizationService
+      .nearby({
+        lat: geo.lat ?? 30.0444,
+        lng: geo.lng ?? 31.2357,
+        distance: geo.distance ?? this.radius,
+        limit: this.nearbyLimit,
+      })
       .subscribe({
-        next: () => {
-          this.toastMessage = 'Booking request sent successfully';
-          this.showToast = true;
-          setTimeout(() => {
-            this.showToast = false;
-          }, 3000);
+        next: (res) => {
+          const list = res.data ?? [];
+          this.nearby.set(list);
+          this.mapMarkers.set(
+            list
+              .filter((org) => org.location?.coordinates)
+              .map((org) => ({
+                id: org._id,
+                // GeoJSON is [lng, lat]; Leaflet wants (lat, lng).
+                lat: org.location.coordinates[1],
+                lng: org.location.coordinates[0],
+                label: org.name,
+                emoji: this.emojiFor(org.type),
+              })),
+          );
         },
-        error: (err) => {
-          console.error('Booking failed error:', err);
-          this.toastMessage = 'Booking failed';
-          this.showToast = true;
-          setTimeout(() => {
-            this.showToast = false;
-          }, 3000);
-        }
+        error: () => this.nearby.set([]),
+        complete: () => this.loading.set(false),
       });
+  }
+
+  private geoOptions(): { lat?: number; lng?: number; distance?: number } {
+    const coords = this.location.coords();
+    if (!coords) return {};
+
+    return {
+      lat: coords.latitude,
+      lng: coords.longitude,
+      distance: this.user?.searchRadius ?? this.radius,
+    };
+  }
+
+  askForLocation(): void {
+    this.locating.set(true);
+
+    this.location.request().subscribe((coords) => {
+      this.locating.set(false);
+      if (coords) this.loadContent();
+    });
+  }
+
+  formatDistance(meters?: number | null): string {
+    if (meters === null || meters === undefined) return '';
+    if (meters < 1000) return `${Math.round(meters)} متر`;
+    return `${(meters / 1000).toFixed(1)} كم`;
+  }
+
+  private emojiFor(type: string): string {
+    const map: Record<string, string> = {
+      hospital: '🏥',
+      workspace: '💼',
+      university: '🎓',
+      school: '🏫',
+      library: '📚',
+      building: '🏢',
+      government: '🏛️',
+      company: '🏬',
+      bank: '🏦',
+      other: '📍',
+    };
+    return map[type] ?? '📍';
   }
 }

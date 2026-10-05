@@ -1,22 +1,20 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { ResourceService } from './resource.service';
+import { ResourceService as CanonicalResourceService } from '../resource.service';
 
-describe('ResourceService', () => {
-  let component: ResourceService;
-  let fixture: ComponentFixture<ResourceService>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ResourceService],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(ResourceService);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
+describe('ResourceService (legacy path)', () => {
+  it('re-exports the canonical service', () => {
+    expect(ResourceService).toBe(CanonicalResourceService);
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('can be injected', () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+
+    expect(TestBed.inject(ResourceService)).toBeInstanceOf(ResourceService);
   });
 });

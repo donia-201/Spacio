@@ -1,0 +1,3 @@
+# SPA fallback: unknown paths are handed to index.html so client-side routing
+# survives a hard refresh.
+/*    /index.html   200

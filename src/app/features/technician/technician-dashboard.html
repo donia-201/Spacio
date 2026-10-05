@@ -1,0 +1,259 @@
+<div class="min-h-screen bg-slate-50">
+  <header class="border-b border-slate-200 bg-white">
+    <div class="container-page py-7">
+      <h1 class="text-2xl font-extrabold text-ink">لوحة الفني</h1>
+      <p class="mt-1.5 text-sm text-ink-soft">
+        @if (data(); as d) {
+          @if (d.scope === 'all') {
+            بتدير كل الأماكن على المنصة.
+          } @else {
+            بتدير {{ d.scope.organizationCount }} مكان.
+          }
+        }
+      </p>
+    </div>
+  </header>
+
+  <div class="container-page py-8">
+    @if (error()) {
+      <div class="rounded-[16px] border border-red-200 bg-red-50 p-5 text-sm font-semibold text-red-700">
+        {{ error() }}
+      </div>
+    } @else if (loading()) {
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="h-28 animate-pulse rounded-[16px] border border-slate-200 bg-white"></div>
+        }
+      </div>
+    } @else if (data(); as d) {
+      <!-- Stats -->
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">الأماكن اللي بتديرها</p>
+          <p class="mt-1.5 text-2xl font-extrabold text-ink tabular">{{ d.organizationsManaged }}</p>
+        </div>
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">إجمالي الموارد</p>
+          <p class="mt-1.5 text-2xl font-extrabold text-ink tabular">{{ d.resources.total }}</p>
+        </div>
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">في الصيانة</p>
+          <p class="mt-1.5 text-2xl font-extrabold text-slate-600 tabular">{{ d.resources.inMaintenance }}</p>
+        </div>
+        <div class="card-soft p-5">
+          <p class="text-xs font-semibold text-ink-muted">حجوزات معلّقة</p>
+          <p
+            class="mt-1.5 text-2xl font-extrabold tabular"
+            [class.text-accent-600]="d.bookings.pending > 0"
+            [class.text-ink]="d.bookings.pending === 0"
+          >
+            {{ d.bookings.pending }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Booking queue -->
+      <section class="mt-6">
+        <h2 class="text-xl font-extrabold text-ink">طلبات الحجز المعلّقة</h2>
+        <p class="mt-1 text-sm text-ink-soft">
+          راجع الطلب عشان المكان يتحرر في الوقت المحدد.
+        </p>
+
+        <div class="mt-4 space-y-3">
+          @for (booking of d.bookings.queue; track booking._id) {
+            <div class="card-soft flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-bold text-ink">{{ booking.resource.name }}</p>
+                <p class="mt-0.5 text-xs text-ink-soft">
+                  {{ booking.organization.name }} • {{ booking.resource.typeLabel }}
+                </p>
+                <p class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-semibold text-ink-muted tabular">
+                  <span>🕐 {{ booking.startTime | date: 'd MMM، HH:mm' }}</span>
+                  <span>⏱ {{ booking.endTime | date: 'HH:mm' }}</span>
+                </p>
+                @if (booking.notes) {
+                  <p class="mt-2 rounded-lg bg-slate-50 p-2.5 text-[11px] leading-relaxed text-ink-soft">
+                    {{ booking.notes }}
+                  </p>
+                }
+              </div>
+
+              <div class="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  (click)="decide(booking, 'approve')"
+                  [disabled]="busyId() === booking._id"
+                  class="btn-accent flex-1 !py-2 text-xs disabled:opacity-60 sm:flex-none"
+                >
+                  {{ busyId() === booking._id ? '...' : 'تأكيد' }}
+                </button>
+                <button
+                  type="button"
+                  (click)="decide(booking, 'reject')"
+                  [disabled]="busyId() === booking._id"
+                  class="btn-ghost-dark flex-1 !border-red-200 !py-2 !text-xs !text-red-600 hover:!bg-red-50 disabled:opacity-60 sm:flex-none"
+                >
+                  رفض
+                </button>
+              </div>
+            </div>
+          } @empty {
+            <div class="card-soft px-6 py-12 text-center">
+              <p class="text-3xl">✅</p>
+              <p class="mt-3 text-sm font-bold text-ink">مفيش طلبات معلّقة</p>
+              <p class="mt-1 text-xs text-ink-muted">كل الحجوزات اتراجعت.</p>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- Upcoming -->
+      @if (d.bookings.upcoming.length) {
+        <section class="mt-8">
+          <h2 class="text-xl font-extrabold text-ink">حجوزات مؤكدة قادمة</h2>
+          <div class="mt-4 space-y-3">
+            @for (booking of d.bookings.upcoming; track booking._id) {
+              <div class="card-soft flex flex-wrap items-center gap-3 p-4">
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-sm font-bold text-ink">
+                    {{ booking.resource.name }}
+                  </span>
+                  <span class="block text-xs text-ink-soft">{{ booking.organization.name }}</span>
+                </span>
+                <span class="text-[11px] font-semibold text-ink-muted tabular">
+                  {{ booking.startTime | date: 'd MMM، HH:mm' }}
+                </span>
+                <button
+                  type="button"
+                  (click)="complete(booking)"
+                  [disabled]="busyId() === booking._id"
+                  class="rounded-xl border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-[11px] font-bold text-brand-700 transition-colors hover:bg-brand-100 disabled:opacity-60"
+                >
+                  تم الاستخدام
+                </button>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Resources -->
+      <section class="mt-8">
+        <h2 class="text-xl font-extrabold text-ink">الأماكن اللي بتديرها</h2>
+        <p class="mt-1 text-sm text-ink-soft">
+          غيّر حالة المكان عشان يتحدث فوراً في تطبيق المستخدمين.
+        </p>
+
+        <!-- Status tabs -->
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            (click)="setTab('all')"
+            class="rounded-xl border px-4 py-2 text-xs font-bold transition-colors"
+            [class.border-brand-600]="tab() === 'all'"
+            [class.bg-brand-600]="tab() === 'all'"
+            [class.text-white]="tab() === 'all'"
+            [class.border-slate-200]="tab() !== 'all'"
+            [class.bg-white]="tab() !== 'all'"
+            [class.text-ink-soft]="tab() !== 'all'"
+          >
+            الكل ({{ resources().length }})
+          </button>
+          <button
+            type="button"
+            (click)="setTab('available')"
+            class="rounded-xl border px-4 py-2 text-xs font-bold transition-colors"
+            [class.border-brand-600]="tab() === 'available'"
+            [class.bg-brand-600]="tab() === 'available'"
+            [class.text-white]="tab() === 'available'"
+            [class.border-slate-200]="tab() !== 'available'"
+            [class.bg-white]="tab() !== 'available'"
+            [class.text-ink-soft]="tab() !== 'available'"
+          >
+            متاح ({{ countByStatus('available') }})
+          </button>
+          <button
+            type="button"
+            (click)="setTab('booked')"
+            class="rounded-xl border px-4 py-2 text-xs font-bold transition-colors"
+            [class.border-brand-600]="tab() === 'booked'"
+            [class.bg-brand-600]="tab() === 'booked'"
+            [class.text-white]="tab() === 'booked'"
+            [class.border-slate-200]="tab() !== 'booked'"
+            [class.bg-white]="tab() !== 'booked'"
+            [class.text-ink-soft]="tab() !== 'booked'"
+          >
+            محجوز ({{ countByStatus('booked') }})
+          </button>
+          <button
+            type="button"
+            (click)="setTab('maintenance')"
+            class="rounded-xl border px-4 py-2 text-xs font-bold transition-colors"
+            [class.border-brand-600]="tab() === 'maintenance'"
+            [class.bg-brand-600]="tab() === 'maintenance'"
+            [class.text-white]="tab() === 'maintenance'"
+            [class.border-slate-200]="tab() !== 'maintenance'"
+            [class.bg-white]="tab() !== 'maintenance'"
+            [class.text-ink-soft]="tab() !== 'maintenance'"
+          >
+            صيانة ({{ countByStatus('maintenance') }})
+          </button>
+        </div>
+
+        <div class="mt-4 space-y-3">
+          @for (resource of visibleResources(); track resource._id) {
+            <div class="card-soft flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <p class="text-sm font-bold text-ink">{{ resource.name }}</p>
+                  <span
+                    class="rounded-full px-2.5 py-0.5 text-[11px] font-bold"
+                    [class.bg-brand-50]="resource.status === 'available'"
+                    [class.text-brand-700]="resource.status === 'available'"
+                    [class.bg-amber-50]="resource.status === 'booked'"
+                    [class.text-amber-700]="resource.status === 'booked'"
+                    [class.bg-slate-100]="resource.status === 'maintenance'"
+                    [class.text-slate-600]="resource.status === 'maintenance'"
+                  >
+                    {{ resource.status | status }}
+                  </span>
+                </div>
+                <p class="mt-0.5 text-xs text-ink-soft">
+                  {{ resource.typeLabel }}
+                  @if (resource.capacity) {
+                    <span class="tabular">• سعة {{ resource.capacity }}</span>
+                  }
+                </p>
+              </div>
+
+              <!-- Status switcher -->
+              <div class="flex shrink-0 gap-1.5">
+                @for (option of statuses; track option.key) {
+                  <button
+                    type="button"
+                    (click)="setStatus(resource, option.key)"
+                    [disabled]="busyId() === resource._id || resource.status === option.key"
+                    class="rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-colors disabled:opacity-40"
+                    [class.border-brand-600]="resource.status === option.key"
+                    [class.bg-brand-600]="resource.status === option.key"
+                    [class.text-white]="resource.status === option.key"
+                    [class.border-slate-200]="resource.status !== option.key"
+                    [class.bg-white]="resource.status !== option.key"
+                    [class.text-ink-soft]="resource.status !== option.key"
+                  >
+                    {{ option.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          } @empty {
+            <div class="card-soft px-6 py-12 text-center">
+              <p class="text-3xl">🗂️</p>
+              <p class="mt-3 text-sm font-bold text-ink">مفيش أماكن في التصنيف ده</p>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  </div>
+</div>

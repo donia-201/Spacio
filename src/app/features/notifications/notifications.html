@@ -1,0 +1,127 @@
+<div class="min-h-screen bg-slate-50">
+  <header class="border-b border-slate-200 bg-white">
+    <div class="container-page flex flex-wrap items-center justify-between gap-4 py-7">
+      <div>
+        <h1 class="text-2xl font-extrabold text-ink">الإشعارات</h1>
+        <p class="mt-1.5 text-sm text-ink-soft">
+          @if (unreadCount() > 0) {
+            عندك {{ unreadCount() }} إشعار جديد
+          } @else {
+            كل الإشعارات مقروءة
+          }
+        </p>
+      </div>
+
+      @if (unreadCount() > 0) {
+        <button
+          type="button"
+          (click)="markAllRead()"
+          [disabled]="busy()"
+          class="btn-ghost-dark !py-2 text-xs disabled:opacity-60"
+        >
+          {{ busy() ? 'جاري التحديث...' : 'قراءة الكل' }}
+        </button>
+      }
+    </div>
+
+    <!-- Filter -->
+    <div class="container-page flex gap-2 pb-5">
+      <button
+        type="button"
+        (click)="filter.set('all')"
+        class="rounded-xl border px-4 py-2 text-xs font-bold transition-colors"
+        [class.border-brand-600]="filter() === 'all'"
+        [class.bg-brand-600]="filter() === 'all'"
+        [class.text-white]="filter() === 'all'"
+        [class.border-slate-200]="filter() !== 'all'"
+        [class.bg-white]="filter() !== 'all'"
+        [class.text-ink-soft]="filter() !== 'all'"
+      >
+        الكل
+      </button>
+      <button
+        type="button"
+        (click)="filter.set('unread')"
+        class="rounded-xl border px-4 py-2 text-xs font-bold transition-colors"
+        [class.border-brand-600]="filter() === 'unread'"
+        [class.bg-brand-600]="filter() === 'unread'"
+        [class.text-white]="filter() === 'unread'"
+        [class.border-slate-200]="filter() !== 'unread'"
+        [class.bg-white]="filter() !== 'unread'"
+        [class.text-ink-soft]="filter() !== 'unread'"
+      >
+        غير المقروءة
+      </button>
+    </div>
+  </header>
+
+  <div class="container-page py-8">
+    @if (loading()) {
+      <div class="space-y-3">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="h-24 animate-pulse rounded-[16px] border border-slate-200 bg-white"></div>
+        }
+      </div>
+    } @else {
+      <div class="space-y-3">
+        @for (item of visible(); track item._id) {
+          <div
+            class="card-soft flex items-start gap-4 p-4 transition-colors"
+            [class.border-brand-200]="!item.isRead"
+            [class.bg-brand-50/30]="!item.isRead"
+            role="button"
+            tabindex="0"
+            (click)="open(item)"
+            (keydown.enter)="open(item)"
+            (keydown.space)="open(item); $event.preventDefault()"
+          >
+            <span
+              class="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-xl"
+              [class]="toneFor(item.type)"
+            >
+              {{ iconFor(item.type) }}
+            </span>
+
+            <div class="min-w-0 flex-1">
+              <div class="flex items-start gap-2">
+                <p
+                  class="text-sm font-bold text-ink"
+                  [class.font-extrabold]="!item.isRead"
+                >
+                  {{ item.title }}
+                </p>
+                @if (!item.isRead) {
+                  <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-accent-500"></span>
+                }
+              </div>
+              <p class="mt-1 text-xs leading-relaxed text-ink-soft">{{ item.message }}</p>
+              <p class="mt-1.5 text-[11px] text-ink-muted tabular">
+                {{ item.createdAt | date: 'd MMMM، HH:mm' }}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              (click)="remove(item, $event)"
+              class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-muted transition-colors hover:bg-red-50 hover:text-red-600"
+              aria-label="امسح الإشعار"
+            >
+              <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+        } @empty {
+          <div class="card-soft px-6 py-16 text-center">
+            <p class="text-4xl">🔕</p>
+            <p class="mt-4 text-sm font-bold text-ink">مفيش إشعارات</p>
+            <p class="mt-1.5 text-xs text-ink-muted">
+              هوصلك هنا تحديثات حجوزاتك وطلبات الانضمام.
+            </p>
+            <a routerLink="/home" class="btn-ghost-dark mt-6">الرجوع للرئيسية</a>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

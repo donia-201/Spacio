@@ -1,0 +1,187 @@
+<div class="min-h-screen bg-slate-50">
+  <!-- Header -->
+  <header class="border-b border-slate-200 bg-white">
+    <div class="container-page py-7">
+      <a
+        routerLink="/home"
+        class="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition-colors hover:text-brand-700"
+      >
+        <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4 rtl:-scale-x-100" aria-hidden="true">
+          <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        رجوع للرئيسية
+      </a>
+
+      <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 class="text-2xl font-extrabold text-ink sm:text-3xl">{{ title }}</h1>
+          <p class="mt-1.5 text-sm text-ink-soft">
+            @if (coords) {
+              {{ visible().length }} مكان مرتب حسب القرب منك
+            } @else {
+              {{ visible().length }} مكان — فعّل الموقع علشان نرتّبهم حسب القرب
+            }
+          </p>
+        </div>
+
+        <!-- Search within the category -->
+        <div class="relative sm:w-72">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            class="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+            <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <input
+            type="search"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+            placeholder="دوّر بالاسم أو العنوان..."
+            aria-label="بحث في التصنيف"
+            class="w-full rounded-xl border border-slate-300 bg-white py-2.5 pr-10 pl-4 text-sm outline-none transition-colors focus:border-brand-500"
+          />
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container-page py-8">
+    @if (error()) {
+      <div class="rounded-[16px] border border-red-200 bg-red-50 p-5 text-sm font-semibold text-red-700">
+        {{ error() }}
+      </div>
+    }
+
+    <div class="grid gap-6 lg:grid-cols-5">
+      <!-- List -->
+      <div class="space-y-3 lg:col-span-2">
+        @if (loading()) {
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <div class="h-24 animate-pulse rounded-[16px] border border-slate-200 bg-white"></div>
+          }
+        } @else {
+          @for (org of visible(); track org._id) {
+            <div
+              class="card-soft overflow-hidden transition-all duration-200"
+              [class.border-brand-400]="isSelected(org)"
+              [class.shadow-lift]="isSelected(org)"
+            >
+              <button
+                type="button"
+                (click)="select(org)"
+                class="flex w-full items-center gap-3 p-4 text-right"
+                [attr.aria-expanded]="isSelected(org)"
+              >
+                <span
+                  class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-50 text-2xl"
+                >
+                  {{ org.typeLabel?.[0] ?? '📍' }}
+                </span>
+
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-sm font-bold text-ink">{{ org.name }}</span>
+                  <span class="mt-0.5 block truncate text-xs text-ink-soft">
+                    {{ org.address || org.city || org.governorate }}
+                  </span>
+                  <span class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-ink-muted">
+                    <span class="tabular">{{ org.resourceCount ?? 0 }} خيار</span>
+                    @if (org.availableCount !== undefined) {
+                      <span class="text-brand-700 tabular">{{ org.availableCount }} متاح</span>
+                    }
+                    @if (org.distanceMeters !== undefined) {
+                      <span class="text-accent-600 tabular">{{ formatDistance(org.distanceMeters) }} منك</span>
+                    }
+                  </span>
+                </span>
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  class="h-4 w-4 shrink-0 text-ink-muted transition-transform duration-200"
+                  [class.rotate-90]="isSelected(org)"
+                  aria-hidden="true"
+                >
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+
+              <!-- Expanded: what this place offers -->
+              @if (isSelected(org)) {
+                <div class="border-t border-slate-200 bg-slate-50/70 p-4">
+                  @if (org.description) {
+                    <p class="text-xs leading-relaxed text-ink-soft">{{ org.description }}</p>
+                  }
+
+                  @if (org.options?.length) {
+                    <p class="mt-3 text-[11px] font-bold text-ink-muted">المتاح في المكان</p>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      @for (option of org.options; track option.key) {
+                        <span
+                          class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-ink-soft"
+                        >
+                          {{ option.label }}
+                        </span>
+                      }
+                    </div>
+                  }
+
+                  <div class="mt-4 flex flex-wrap items-center gap-2">
+                    <a
+                      [routerLink]="['/organizations', org._id]"
+                      class="btn-accent !px-4 !py-2 text-xs"
+                    >
+                      اختر من المكان
+                    </a>
+
+                    @if (org.contactPhone) {
+                      <a
+                        [href]="'tel:' + org.contactPhone"
+                        dir="ltr"
+                        class="btn-ghost-dark !px-4 !py-2 text-xs"
+                      >
+                        {{ org.contactPhone }}
+                      </a>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @empty {
+            <div class="card-soft px-6 py-12 text-center">
+              <p class="text-3xl">📭</p>
+              <p class="mt-3 text-sm font-bold text-ink">مفيش أماكن في التصنيف ده لسه</p>
+              <p class="mt-1 text-xs text-ink-muted">
+                جرّب تبحث باسم تاني، أو استعرض التصنيفات التانية.
+              </p>
+              <a routerLink="/home" class="btn-ghost-dark mt-5">استعرض التصنيفات</a>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Map -->
+      <div class="lg:col-span-3">
+        <div
+          class="sticky top-24 h-[520px] overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-soft"
+        >
+          @if (mapMarkers().length) {
+            <app-map-view [markers]="mapMarkers()" [zoom]="12" />
+          } @else {
+            <div class="grid h-full place-items-center px-8 text-center">
+              <div>
+                <p class="text-3xl">🗺️</p>
+                <p class="mt-3 text-sm font-bold text-ink">مفيش أماكن تتعرض على الخريطة</p>
+                <p class="mt-1 text-xs text-ink-muted">
+                  الأماكن بتشتغل على الخريطة لما يكون ليها إحداثيات مسجلة.
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

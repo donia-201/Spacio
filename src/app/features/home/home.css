@@ -1,0 +1,11 @@
+:host {
+  display: block;
+}
+
+/* Thin, unobtrusive scrollbar for the nearby list. */
+@supports (scrollbar-width: thin) {
+  :host ::ng-deep * {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+}

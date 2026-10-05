@@ -1,0 +1,593 @@
+<div id="top" class="bg-white">
+  <!-- ============================================================
+       Header
+       Logo sits on the far right (RTL start), actions on the left.
+       ============================================================ -->
+  <header
+    class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/70"
+  >
+    <div class="container-page flex h-[72px] items-center justify-between gap-4">
+      <!-- Brand -->
+      <a routerLink="/" class="flex shrink-0 items-center gap-2.5">
+        <span
+          class="grid h-10 w-10 place-items-center rounded-xl bg-accent-600 text-white shadow-accent"
+        >
+          <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
+            <path
+              d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <circle cx="12" cy="10" r="2.5" fill="currentColor" />
+          </svg>
+        </span>
+        <span class="flex flex-col leading-tight">
+          <span lang="en" class="text-lg font-extrabold tracking-tight text-ink">
+            Spacio
+          </span>
+          <span class="text-[10px] font-semibold text-ink-muted">
+            احجز مكانك.. بكل سهولة
+          </span>
+        </span>
+      </a>
+
+      <!-- Nav (desktop) -->
+      <nav class="hidden items-center gap-1 lg:flex">
+        @for (link of navLinks; track link.label) {
+          <a
+            [href]="link.href"
+            class="rounded-lg px-3.5 py-2 text-sm font-semibold text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-700"
+          >
+            {{ link.label }}
+          </a>
+        }
+      </nav>
+
+      <!-- Actions -->
+      <div class="flex shrink-0 items-center gap-2">
+        @if (auth.isLoggedIn()) {
+          <a
+            [routerLink]="auth.homeRouteForRole(auth.role())"
+            class="btn-accent !px-5 !py-2.5 text-sm"
+          >
+            افتح لوحة تحكمك
+          </a>
+        } @else {
+          <a
+            routerLink="/login"
+            class="btn-ghost-dark hidden !px-5 !py-2.5 text-sm sm:inline-flex"
+          >
+            تسجيل الدخول
+          </a>
+          <a routerLink="/register" class="btn-accent !px-5 !py-2.5 text-sm">
+            ابدأ الآن
+          </a>
+        }
+
+        <!-- Mobile menu toggle -->
+        <button
+          type="button"
+          class="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-ink-soft transition-colors hover:border-brand-300 hover:text-brand-700 lg:hidden"
+          [attr.aria-expanded]="mobileMenuOpen()"
+          aria-label="القائمة"
+          (click)="mobileMenuOpen.set(!mobileMenuOpen())"
+        >
+          <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
+            @if (mobileMenuOpen()) {
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            } @else {
+              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            }
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    @if (mobileMenuOpen()) {
+      <nav class="border-t border-slate-200 bg-white px-4 py-3 lg:hidden">
+        @for (link of navLinks; track link.label) {
+          <a
+            [href]="link.href"
+            class="block rounded-lg px-3 py-2.5 text-sm font-semibold text-ink-soft hover:bg-brand-50 hover:text-brand-700"
+            (click)="mobileMenuOpen.set(false)"
+          >
+            {{ link.label }}
+          </a>
+        }
+        @if (!auth.isLoggedIn()) {
+          <a
+            routerLink="/login"
+            class="mt-2 block rounded-lg px-3 py-2.5 text-sm font-semibold text-ink-soft hover:bg-brand-50 hover:text-brand-700"
+            (click)="mobileMenuOpen.set(false)"
+          >
+            تسجيل الدخول
+          </a>
+        }
+      </nav>
+    }
+  </header>
+
+  <!-- ============================================================
+       Hero
+       One background image, then everything else is CSS/SVG so the
+       page stays light.
+       ============================================================ -->
+  <section class="relative isolate overflow-hidden">
+    <!-- Background: gradient + one photo + a soft brand wash -->
+    <div class="absolute inset-0 -z-10">
+      <img
+        src="https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=1600&h=900&fit=crop&auto=format&q=55"
+        alt=""
+        aria-hidden="true"
+        class="h-full w-full object-cover object-center opacity-[0.18]"
+        fetchpriority="high"
+        decoding="async"
+      />
+      <div
+        class="absolute inset-0 bg-gradient-to-bl from-brand-50 via-white to-accent-50/70"
+      ></div>
+      <!-- Faint dot grid, drawn in CSS rather than an image -->
+      <div
+        class="absolute inset-0 opacity-[0.35]"
+        style="
+          background-image: radial-gradient(circle at 1px 1px, rgba(15, 118, 110, 0.16) 1px, transparent 0);
+          background-size: 26px 26px;
+        "
+      ></div>
+    </div>
+
+    <!-- Floating translucent icons: the brief's "عناصر عائمة" -->
+    <div class="pointer-events-none absolute inset-0 -z-10 hidden lg:block" aria-hidden="true">
+      <span
+        class="absolute right-[8%] top-[18%] grid h-14 w-14 place-items-center rounded-2xl border border-brand-200/70 bg-white/70 text-2xl text-brand-600 shadow-soft backdrop-blur-sm"
+        style="animation: float-slow 9s ease-in-out infinite"
+      >🏥</span>
+      <span
+        class="absolute right-[26%] top-[9%] grid h-11 w-11 place-items-center rounded-xl border border-brand-200/70 bg-white/70 text-xl text-brand-600 shadow-soft backdrop-blur-sm"
+        style="animation: float-slow 11s ease-in-out infinite 1.2s"
+      >🏢</span>
+      <span
+        class="absolute left-[10%] top-[22%] grid h-12 w-12 place-items-center rounded-xl border border-accent-200/80 bg-white/70 text-xl text-accent-600 shadow-soft backdrop-blur-sm"
+        style="animation: float-slow 10s ease-in-out infinite 0.6s"
+      >📍</span>
+      <span
+        class="absolute left-[28%] top-[12%] grid h-10 w-10 place-items-center rounded-xl border border-brand-200/70 bg-white/70 text-lg text-brand-600 shadow-soft backdrop-blur-sm"
+        style="animation: float-slow 12s ease-in-out infinite 2s"
+      >⚙</span>
+      <span
+        class="absolute left-[18%] top-[46%] grid h-11 w-11 place-items-center rounded-xl border border-brand-200/70 bg-white/70 text-xl text-brand-600 shadow-soft backdrop-blur-sm"
+        style="animation: float-slow 13s ease-in-out infinite 1.8s"
+      >🗼</span>
+    </div>
+
+    <div class="container-page pb-16 pt-14 sm:pb-20 sm:pt-20 lg:pb-24 lg:pt-24">
+      <div class="mx-auto max-w-3xl text-center">
+        <span class="eyebrow rise-in">
+          <span class="h-1.5 w-1.5 rounded-full bg-accent-500"></span>
+          منصّة الحجز الأولى في مصر
+        </span>
+
+        <h1
+          class="rise-in mt-6 text-4xl font-extrabold leading-[1.25] text-ink sm:text-5xl lg:text-[3.5rem]"
+          style="animation-delay: 80ms"
+        >
+          كل اللي حواليك،<br class="hidden sm:block" />
+          في مكان واحد.
+        </h1>
+
+        <p
+          class="rise-in mx-auto mt-5 max-w-2xl text-base leading-relaxed text-ink-soft sm:text-lg"
+          style="animation-delay: 160ms"
+        >
+          مستشفيات، مكاتب، نوادي، مساحات عمل وأماكن أكثر... اكتشفها واحجزها من مكان واحد.
+        </p>
+
+        <!-- Search bar -->
+        <form
+          class="rise-in mx-auto mt-9 max-w-2xl"
+          style="animation-delay: 240ms"
+          (submit)="onSearch($event)"
+        >
+          <div
+            class="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-lift sm:flex-row sm:items-center sm:rounded-full sm:p-2"
+          >
+            <div class="flex min-w-0 flex-1 items-center gap-3 px-3">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                class="h-5 w-5 shrink-0 text-accent-500"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+                <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <input
+                type="search"
+                name="search"
+                [ngModel]="searchTerm()"
+                (ngModelChange)="searchTerm.set($event)"
+                placeholder="ابحث عن مكان أو خدمة..."
+                aria-label="ابحث عن مكان أو خدمة"
+                class="w-full min-w-0 bg-transparent py-2.5 text-sm text-ink outline-none placeholder:text-ink-muted sm:py-2"
+              />
+            </div>
+
+            <div class="flex items-stretch gap-2">
+              <button type="submit" class="btn-accent flex-1 sm:flex-none">
+                ابحث
+              </button>
+
+              <button
+                type="button"
+                (click)="useMyLocation()"
+                [disabled]="usingMyLocation()"
+                class="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100 disabled:opacity-60 sm:flex-none"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  class="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="2" />
+                  <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" />
+                  <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                {{ usingMyLocation() ? 'جاري تحديدك...' : 'موقعك الحالي' }}
+              </button>
+            </div>
+          </div>
+
+          @if (locationNotice()) {
+            <p class="mt-3 text-sm font-semibold text-brand-700">{{ locationNotice() }}</p>
+          }
+        </form>
+
+        <!-- Trust row -->
+        <ul
+          class="rise-in mx-auto mt-7 flex max-w-xl flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-ink-muted"
+          style="animation-delay: 320ms"
+        >
+          <li class="flex items-center gap-1.5">
+            <span class="text-brand-600">✓</span> مجاني بالكامل
+          </li>
+          <li class="flex items-center gap-1.5">
+            <span class="text-brand-600">✓</span> بدون رسوم خفية
+          </li>
+          <li class="flex items-center gap-1.5">
+            <span class="text-brand-600">✓</span> تأكيد فوري للحجز
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       اكتشف اللي حواليك
+       ============================================================ -->
+  <section id="discover" class="scroll-mt-24 bg-slate-50 py-16 sm:py-20">
+    <div class="container-page">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-extrabold text-ink sm:text-4xl">
+          اكتشف اللي حواليك
+        </h2>
+        <p class="mt-3 text-base leading-relaxed text-ink-soft">
+          تصفح مدينتك الاماكن والخدمات اللي ممكن تحتاجها في حياتك اليومية.
+        </p>
+      </div>
+
+      @if (loading()) {
+        <div class="mt-12 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+          @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+            <div class="h-72 animate-pulse rounded-[16px] border border-slate-200 bg-white"></div>
+          }
+        </div>
+      } @else {
+        <div class="mt-12 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+          @for (category of categories(); track category.key) {
+            <a
+              [routerLink]="['/home/category', category.key]"
+              class="group card-soft flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:border-brand-300 hover:shadow-lift"
+            >
+              <!-- Photo: small, compressed, lazy -->
+              <div class="relative h-36 overflow-hidden bg-slate-100 sm:h-40">
+                <img
+                  [src]="imageFor(category.key)"
+                  [alt]="category.plural"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div
+                  class="absolute inset-0 bg-gradient-to-t from-slate-900/45 via-transparent to-transparent"
+                ></div>
+
+                <!-- Prominent circular icon, per the brief -->
+                <span
+                  class="absolute bottom-3 grid h-12 w-12 place-items-center rounded-full bg-white text-2xl shadow-soft ring-4 ring-white/70 transition-transform duration-300 group-hover:scale-110"
+                >
+                  {{ category.icon }}
+                </span>
+
+                <span
+                  class="absolute end-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-ink-soft tabular"
+                >
+                  {{ category.nearbyCount ?? category.total }} مكان
+                </span>
+              </div>
+
+              <div class="flex flex-1 flex-col p-4 sm:p-5">
+                <h3 class="text-base font-bold text-ink sm:text-lg">
+                  {{ category.plural }}
+                </h3>
+                <p class="mt-1.5 line-clamp-2 flex-1 text-xs leading-relaxed text-ink-soft sm:text-sm">
+                  {{ category.description || blurbFor(category.key) }}
+                </p>
+
+                <div class="mt-4 flex items-center justify-between">
+                  @if (category.nearestMeters !== null) {
+                    <span class="text-[11px] font-semibold text-ink-muted tabular">
+                      {{ formatDistance(category.nearestMeters) }} منك
+                    </span>
+                  } @else {
+                    <span class="text-[11px] font-semibold text-ink-muted">
+                      {{ category.total }} إجمالي
+                    </span>
+                  }
+
+                  <!-- Small directional arrow -->
+                  <span
+                    class="grid h-8 w-8 place-items-center rounded-full bg-brand-50 text-brand-700 transition-all duration-300 group-hover:bg-brand-600 group-hover:text-white"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4 rtl:-scale-x-100" aria-hidden="true">
+                      <path
+                        d="M15 6l-6 6 6 6"
+                        stroke="currentColor"
+                        stroke-width="2.2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </a>
+          }
+        </div>
+
+        <!-- Section footer: أقرب places -->
+        @if (nearbyCategories.length) {
+          <div
+            class="mt-14 rounded-[16px] border border-slate-200 bg-white p-6 shadow-soft sm:p-8"
+          >
+            <div
+              class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <h3 class="text-lg font-bold text-ink">أماكن قريبة منك</h3>
+                <p class="mt-1 text-sm text-ink-soft">
+                  مرتبة حسب المسافة من موقعك الحالي.
+                </p>
+              </div>
+              <a
+                routerLink="/home"
+                class="btn-ghost-dark shrink-0 !border-brand-200 !text-brand-700 hover:!bg-brand-50"
+              >
+                عرض الكل
+                <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4 rtl:-scale-x-100" aria-hidden="true">
+                  <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </a>
+            </div>
+
+            <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              @for (category of nearbyCategories; track category.key) {
+                <a
+                  [routerLink]="['/home/category', category.key]"
+                  class="group flex items-center gap-3 rounded-xl border border-slate-200 p-3 transition-colors hover:border-brand-300 hover:bg-brand-50/50"
+                >
+                  <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-xl">
+                    {{ category.icon }}
+                  </span>
+                  <span class="min-w-0">
+                    <span class="block truncate text-sm font-bold text-ink">
+                      {{ category.plural }}
+                    </span>
+                    <span class="block text-[11px] font-semibold text-accent-600 tabular">
+                      {{ formatDistance(category.nearestMeters) }}
+                    </span>
+                  </span>
+                </a>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </section>
+
+  <!-- ============================================================
+       كيف نعمل؟
+       ============================================================ -->
+  <section id="how" class="scroll-mt-24 bg-white py-16 sm:py-20">
+    <div class="container-page">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-extrabold text-ink sm:text-4xl">كيف نعمل؟</h2>
+        <p class="mt-3 text-base text-ink-soft">
+          أربع خطوات، وتوصّل للمكان اللي محتاجه.
+        </p>
+      </div>
+
+      <ol class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        @for (step of steps; track step.title; let i = $index) {
+          <li class="card-soft relative p-6">
+            <span
+              class="absolute -top-4 grid h-10 w-10 place-items-center rounded-full bg-brand-600 text-sm font-extrabold text-white shadow-brand tabular"
+            >
+              {{ i + 1 }}
+            </span>
+            <h3 class="mt-3 text-base font-bold text-ink">{{ step.title }}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-soft">{{ step.body }}</p>
+          </li>
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       ليه Spacio؟
+       ============================================================ -->
+  <section id="about" class="scroll-mt-24 bg-slate-50 py-16 sm:py-20">
+    <div class="container-page">
+      <div class="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+        <div>
+          <span class="eyebrow">عن Spacio</span>
+          <h2 class="mt-5 text-3xl font-extrabold text-ink sm:text-4xl">
+            منصة واحدة تجمع الأماكن والخدمات اللي حوالينك
+          </h2>
+          <p class="mt-4 leading-relaxed text-ink-soft">
+            سبيشيو متصل بقاعدة بيانات الأماكن في مصر، وبيرتّبلك كل حاجة حسب
+            موقعك الحقيقي. لما تفتح أي مكان، هتلاقي كل الاختيارات اللي تقدر
+            تحجزها فيه: عيادات، قاعات، معامل، مساحات عمل.
+          </p>
+          <p class="mt-3 leading-relaxed text-ink-soft">
+            وكل اللي محتاج صيانة أو إدارة بيتدار من لوحة تحكم مخصصة، عشان
+            المعلومة اللي بتشوفها تكون صحيحة دايماً.
+          </p>
+
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a routerLink="/register" class="btn-accent">ابدأ الآن</a>
+            <a href="#discover" class="btn-ghost-dark">استكشف التصنيفات</a>
+          </div>
+        </div>
+
+        <div class="relative">
+          <div
+            class="absolute -inset-3 rotate-2 rounded-[24px] bg-brand-100/70"
+            aria-hidden="true"
+          ></div>
+          <img
+            src="https://images.unsplash.com/photo-1577412647305-991150c7d163?w=800&h=560&fit=crop&auto=format&q=55"
+            alt="أماكن وخدمات قريبة منك"
+            loading="lazy"
+            decoding="async"
+            class="relative h-64 w-full rounded-[16px] object-cover shadow-lift sm:h-80"
+          />
+
+          <div
+            class="absolute -bottom-5 rounded-[16px] border border-slate-200 bg-white p-4 shadow-lift"
+          >
+            <div class="flex items-center gap-3">
+              <span class="grid h-10 w-10 place-items-center rounded-xl bg-accent-50 text-xl">
+                ⚡
+              </span>
+              <div>
+                <p class="text-sm font-bold text-ink">حجز فوري</p>
+                <p class="text-[11px] text-ink-muted">بدون انتظار أو تأكيد يدوي</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        @for (feature of features; track feature.title) {
+          <div
+            class="card-soft group p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand-300 hover:shadow-lift"
+          >
+            <span
+              class="grid h-12 w-12 place-items-center rounded-xl bg-brand-50 text-2xl text-brand-700 transition-colors group-hover:bg-brand-600 group-hover:text-white"
+            >
+              {{ feature.icon }}
+            </span>
+            <h3 class="mt-4 text-base font-bold text-ink">{{ feature.title }}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-soft">{{ feature.body }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CTA
+       ============================================================ -->
+  <section class="bg-white py-16 sm:py-20">
+    <div class="container-page">
+      <div
+        class="relative isolate overflow-hidden rounded-[24px] bg-brand-800 px-6 py-14 text-center shadow-brand sm:px-12"
+      >
+        <div
+          class="absolute inset-0 -z-10 opacity-25"
+          style="
+            background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.4) 1px, transparent 0);
+            background-size: 22px 22px;
+          "
+          aria-hidden="true"
+        ></div>
+
+        <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
+          الأماكن اللي حواليك، على بُعد ضغطة واحدة
+        </h2>
+        <p class="mx-auto mt-4 max-w-xl leading-relaxed text-brand-50">
+          سجّل دلوقتي وابدأ اكتشف الأماكن القريبة منك واحجزها في ثوانٍ.
+        </p>
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <a
+            routerLink="/register"
+            class="inline-flex items-center justify-center rounded-xl bg-accent-600 px-7 py-3.5 text-sm font-extrabold text-white shadow-accent transition-colors hover:bg-accent-700"
+          >
+            ابدأ الآن مجاناً
+          </a>
+          <a
+            routerLink="/login"
+            class="inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/10 px-7 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/20"
+          >
+            عندي حساب بالفعل
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Footer
+       ============================================================ -->
+  <footer class="border-t border-slate-200 bg-slate-50 py-12">
+    <div class="container-page">
+      <div
+        class="flex flex-col items-center justify-between gap-6 sm:flex-row"
+      >
+        <div class="flex items-center gap-2.5">
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-accent-600 text-white">
+            <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
+              <path
+                d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linejoin="round"
+              />
+              <circle cx="12" cy="10" r="2.5" fill="currentColor" />
+            </svg>
+          </span>
+          <div class="leading-tight">
+            <p lang="en" class="font-extrabold text-ink">Spacio</p>
+            <p class="text-[11px] text-ink-muted">احجز مكانك.. بكل سهولة</p>
+          </div>
+        </div>
+
+        <nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
+          @for (link of navLinks; track link.label) {
+            <a [href]="link.href" class="font-semibold text-ink-soft hover:text-brand-700">
+              {{ link.label }}
+            </a>
+          }
+        </nav>
+      </div>
+
+      <p class="mt-8 text-center text-xs text-ink-muted">
+        © 2026 Spacio — منصّة الحجز الذكي للأماكن والخدمات.
+      </p>
+    </div>
+  </footer>
+</div>

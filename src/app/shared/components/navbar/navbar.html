@@ -1,35 +1,134 @@
-<nav class="bg-white border-b border-gray-200 fixed w-full top-0 start-0 z-50 shadow-sm">
-  <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-    
-    <a routerLink="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-      <img src="https://flowbite.com/docs/images/logo.svg" class="h-7" alt="Spacio Logo" />
-      <span class="self-center text-xl font-semibold whitespace-nowrap text-gray-900">Spacio</span>
+<header
+  class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md supports-[backdrop-filter]:bg-white/75"
+>
+  <div class="container-page flex h-[68px] items-center justify-between gap-4">
+    <!-- Brand: right in RTL -->
+    <a routerLink="/" class="flex shrink-0 items-center gap-2.5" (click)="close()">
+      <span
+        class="grid h-9 w-9 place-items-center rounded-xl bg-accent-600 text-white shadow-accent"
+      >
+        <svg viewBox="0 0 24 24" fill="none" class="h-4.5 w-4.5" aria-hidden="true">
+          <path
+            d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
+          />
+          <circle cx="12" cy="10" r="2.5" fill="currentColor" />
+        </svg>
+      </span>
+      <span lang="en" class="text-lg font-extrabold tracking-tight text-ink">Spacio</span>
     </a>
 
-    <button 
-      type="button" 
-      (click)="mobileMenu.classList.toggle('hidden')" 
-      class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-      </svg>
-    </button>
+    <!-- Desktop nav -->
+    <nav class="hidden items-center gap-1 md:flex">
+      @for (item of items(); track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="!bg-brand-50 !text-brand-700"
+          [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+          class="rounded-lg px-3.5 py-2 text-sm font-semibold text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-700"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </nav>
 
-    <div class="hidden md:flex md:items-center md:w-auto">
-      <ul class="flex space-x-8 rtl:space-x-reverse font-medium">
-        <li><a routerLink="/home" routerLinkActive="text-blue-600" class="text-gray-700 hover:text-blue-600">Home</a></li>
-        <li><a routerLink="/about" routerLinkActive="text-blue-600" class="text-gray-700 hover:text-blue-600">About</a></li>
-        <li><a routerLink="/services" routerLinkActive="text-blue-600" class="text-gray-700 hover:text-blue-600">Services</a></li>
-      </ul>
+    <div class="flex shrink-0 items-center gap-2">
+      <!-- Notification bell -->
+      <a
+        routerLink="/notifications"
+        class="relative grid h-10 w-10 place-items-center rounded-xl text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-700"
+        aria-label="الإشعارات"
+      >
+        <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
+          <path
+            d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6M13.7 20a2 2 0 0 1-3.4 0"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        @if (unread() > 0) {
+          <span
+            class="absolute -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-accent-600 px-1 text-[10px] font-extrabold text-white tabular"
+          >
+            {{ unread() > 9 ? '9+' : unread() }}
+          </span>
+        }
+      </a>
+
+      <!-- Account -->
+      <a
+        routerLink="/profile"
+        class="hidden items-center gap-2.5 rounded-xl border border-slate-200 py-1.5 pe-3 ps-1.5 transition-colors hover:border-brand-300 sm:flex"
+      >
+        <span
+          class="grid h-7 w-7 place-items-center rounded-lg bg-brand-600 text-[11px] font-extrabold text-white"
+        >
+          {{ initials }}
+        </span>
+        <span class="text-xs font-bold text-ink">{{ user?.firstName }}</span>
+      </a>
+
+      <button
+        type="button"
+        (click)="logout()"
+        class="hidden rounded-lg px-3 py-2 text-xs font-bold text-ink-muted transition-colors hover:bg-red-50 hover:text-red-600 lg:block"
+      >
+        خروج
+      </button>
+
+      <!-- Mobile toggle -->
+      <button
+        type="button"
+        (click)="toggle()"
+        class="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-ink-soft transition-colors hover:border-brand-300 hover:text-brand-700 md:hidden"
+        [attr.aria-expanded]="menuOpen()"
+        aria-label="القائمة"
+      >
+        @if (menuOpen()) {
+          <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        } @else {
+          <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        }
+      </button>
     </div>
-
   </div>
 
-  <div #mobileMenu class="hidden md:hidden bg-white border-t border-gray-100 px-4 py-3 shadow-inner">
-    <ul class="flex flex-col space-y-3 font-medium">
-      <li><a routerLink="/home" (click)="mobileMenu.classList.add('hidden')" routerLinkActive="text-blue-600" class="block py-2 text-gray-700 hover:text-blue-600">Home</a></li>
-      <li><a routerLink="/about" (click)="mobileMenu.classList.add('hidden')" routerLinkActive="text-blue-600" class="block py-2 text-gray-700 hover:text-blue-600">About</a></li>
-      <li><a routerLink="/services" (click)="mobileMenu.classList.add('hidden')" routerLinkActive="text-blue-600" class="block py-2 text-gray-700 hover:text-blue-600">Services</a></li>
-    </ul>
-  </div>
-</nav>
+  <!-- Mobile menu -->
+  @if (menuOpen()) {
+    <nav class="border-t border-slate-200 bg-white px-4 py-3 md:hidden">
+      @for (item of items(); track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="!bg-brand-50 !text-brand-700"
+          [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+          class="block rounded-lg px-3 py-2.5 text-sm font-semibold text-ink-soft hover:bg-brand-50 hover:text-brand-700"
+          (click)="close()"
+        >
+          {{ item.label }}
+        </a>
+      }
+
+      <div class="mt-2 border-t border-slate-100 pt-2">
+        <p class="px-3 pb-1 text-xs text-ink-muted">
+          مسجّل بحساب
+          <span class="font-bold text-ink">{{ user?.email }}</span>
+        </p>
+        <button
+          type="button"
+          (click)="logout()"
+          class="block w-full rounded-lg px-3 py-2.5 text-right text-sm font-bold text-red-600 hover:bg-red-50"
+        >
+          تسجيل الخروج
+        </button>
+      </div>
+    </nav>
+  }
+</header>

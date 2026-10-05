@@ -1,21 +1,9 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class ResourceService {
-
-  private http = inject(HttpClient);
-
-  baseUrl = 'http://localhost:3000/resources';
-
-  getResources(): Observable<any> {
-    return this.http.get(this.baseUrl);
-  }
-
-  getResourceById(id: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/${id}`);
-  }
-}
+/**
+ * Legacy path kept so old imports don't break.
+ *
+ * The real service is `../resource.service`. This was a second class with the
+ * same name, a hardcoded base URL, and a `getResources()` that returned
+ * `Observable<any>` — so it type-checked while quietly bypassing the typed
+ * contract.
+ */
+export { ResourceService } from '../resource.service';

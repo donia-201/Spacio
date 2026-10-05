@@ -1,3 +1,235 @@
-/* You can add global styles to this file, and also import other style files */
+/* `source(none)` switches off Tailwind's automatic content detection, which
+   otherwise walks the whole project looking for class names. The explicit
+   @source list below is scoped to src/, so a build never touches node_modules,
+   dist/ or .angular/cache. */
+@import 'tailwindcss' source(none);
 
-@import 'tailwindcss';
+@source './**/*.html';
+@source './**/*.ts';
+
+/* ============================================================
+   Spacio design tokens.
+
+   Primary  : calm teal / deep cyan  -> trust, calm, professionalism
+   Accent   : warm terracotta        -> CTAs, the search icon, highlights
+   Neutrals : clean white surfaces, soft shadows, 12-16px radii
+   Text     : charcoal, with lighter steps for secondary copy
+   ============================================================ */
+
+@theme {
+  /* ---- Primary: teal / deep cyan ---- */
+  --color-brand-50: #f0fdfa;
+  --color-brand-100: #ccfbf1;
+  --color-brand-200: #99f6e4;
+  --color-brand-300: #5eead4;
+  --color-brand-400: #2dd4bf;
+  --color-brand-500: #14b8a6;
+  --color-brand-600: #0d9488;
+  --color-brand-700: #0f766e;
+  --color-brand-800: #115e59;
+  --color-brand-900: #134e4a;
+  --color-brand-950: #042f2e;
+
+  /* ---- Accent: terracotta / burnt orange ---- */
+  --color-accent-50: #fff7ed;
+  --color-accent-100: #ffedd5;
+  --color-accent-200: #fed7aa;
+  --color-accent-300: #fdba74;
+  --color-accent-400: #fb923c;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+  --color-accent-700: #c2410c;
+  --color-accent-800: #9a3412;
+
+  /* ---- Text: charcoal + steps ---- */
+  --color-ink: #1e293b;
+  --color-ink-soft: #475569;
+  --color-ink-muted: #94a3b8;
+  --color-ink-faint: #cbd5e1;
+
+  /* ---- Type ---- */
+  --font-sans:
+    'Cairo', ui-sans-serif, system-ui, 'Segoe UI', 'Noto Sans Arabic', sans-serif;
+
+  /* ---- Radii: the brief asked for 12-16px ---- */
+  --radius-card: 16px;
+
+  /* ---- Soft shadows, never harsh ---- */
+  --shadow-soft: 0 1px 2px rgb(30 41 59 / 0.04), 0 8px 24px -8px rgb(30 41 59 / 0.1);
+  --shadow-lift: 0 2px 4px rgb(30 41 59 / 0.05), 0 18px 40px -12px rgb(30 41 59 / 0.18);
+  --shadow-brand: 0 10px 30px -10px rgb(15 118 110 / 0.45);
+  --shadow-accent: 0 10px 30px -10px rgb(249 115 22 / 0.5);
+
+  /* ---- Motion ---- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background-color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.7;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    line-height: 1.35;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  /* Latin fragments inside Arabic copy ("Spacio") shouldn't flip or gain
+     Arabic metrics. */
+  :lang(en) {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  /* Numbers stay readable inside Arabic sentences. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-200);
+    color: var(--color-brand-950);
+  }
+
+  /* A single visible focus treatment across the whole app. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+/* ============================================================
+   Small reusable pieces
+   ============================================================ */
+
+@layer components {
+  .container-page {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-page {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  .card-soft {
+    background-color: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* The single primary CTA treatment. */
+  .btn-accent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: var(--color-accent-600);
+    color: #fff;
+    font-weight: 700;
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    box-shadow: var(--shadow-accent);
+    transition:
+      background-color 0.2s var(--ease-out-soft),
+      transform 0.2s var(--ease-out-soft),
+      box-shadow 0.2s var(--ease-out-soft);
+  }
+
+  .btn-accent:hover {
+    background-color: var(--color-accent-700);
+    transform: translateY(-1px);
+  }
+
+  .btn-accent:active {
+    transform: translateY(0);
+  }
+
+  .btn-ghost-dark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--color-ink);
+    font-weight: 600;
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid #e2e8f0;
+    background-color: #fff;
+    transition: all 0.2s var(--ease-out-soft);
+  }
+
+  .btn-ghost-dark:hover {
+    border-color: var(--color-brand-400);
+    color: var(--color-brand-700);
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-brand-700);
+    background-color: var(--color-brand-50);
+    border: 1px solid var(--color-brand-100);
+    border-radius: 999px;
+    padding: 0.375rem 0.875rem;
+  }
+
+  /* Entrance used by the hero and the category grid. */
+  .rise-in {
+    animation: rise-in 0.7s var(--ease-out-soft) both;
+  }
+
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rise-in {
+      animation: none;
+    }
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
