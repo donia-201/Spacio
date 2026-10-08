@@ -7,5 +7,5 @@
  */
 export const environment = {
   production: true,
-  apiUrl: 'https://api.spacio.app',
+  apiUrl: 'https://spacio-backend-production.up.railway.app',
 };
